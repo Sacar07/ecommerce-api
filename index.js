@@ -4,7 +4,8 @@ const app = express();
 
 
 const productRoutes = require("./route/product")
-const userRoutes = require("./route/user")
+const userRoutes = require("./route/user");
+const handleServerError = require("./middleware/handleServerError");
 
 require("./config/database") 
 
@@ -12,6 +13,8 @@ require("./config/database")
 app.use(express.json()); // global middleware ,sets up req.body
 app.use("/api/products",productRoutes)
 app.use("/api/users",userRoutes) 
+
+app.use(handleServerError)
 
 
 

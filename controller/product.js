@@ -1,21 +1,21 @@
 const Product = require("../model/Product");
 
-const fetchProducts = async (req, res) => {
+const fetchProducts = async (req, res,next) => {
   try {
     let products = await Product.find({}).populate("createdBy");
     res.send(products);
   } catch (err) {
-    res.send(err);
+    return next(err);
   }
 };
 
-const storeProducts = async (req, res) => {
+const storeProducts = async (req, res, next) => {
   try {
     let { title, price, createdBy } = req.body;
     let products = await Product.create({ title, price, createdBy });
     res.send(products);
   } catch (err) {
-    res.status(400).send(err.name);
+    return next(err);
   }
 };
 
