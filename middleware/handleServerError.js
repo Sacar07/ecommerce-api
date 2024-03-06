@@ -3,7 +3,7 @@ module.exports = (err, req, res, next) => {
   let error = err.name;
   let msg = "server error"
 
-  if (err.name = "ValidationError"){
+  if (err.name === "ValidationError"){
     msg = "Bad request/Validation error"
     statusCode = 400;
     error = {
@@ -14,7 +14,8 @@ module.exports = (err, req, res, next) => {
 
 res.status(statusCode).send({
     msg,
-    error
+    error,
+    stack: err.stack // kun line bata err ako dekhaucha
 });
     
 };

@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 const ObjectId = Schema.ObjectId;
 
 const UserSchema = new Schema({
-    userName: {
+    name: {
         type: String,
         required: true,
     },
@@ -19,5 +19,5 @@ const UserSchema = new Schema({
 });
 
 
-const User = mongoose.model("User", UserSchema);
-module.exports = User;
+const Auth = mongoose.model("Auth", UserSchema);
+module.exports = Auth;
