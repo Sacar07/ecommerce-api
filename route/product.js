@@ -8,9 +8,11 @@ const {
   deleteProducts,
 } = require("../controller/product");
 
+const {checkAuthentication} = require("../middleware/auth")
+
 router.get("", fetchProducts);
 
-router.post("", storeProducts);
+router.post("",checkAuthentication, storeProducts);
 
 router.put("/:_id", updateProducts);
 

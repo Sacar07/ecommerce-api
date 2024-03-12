@@ -11,8 +11,11 @@ const fetchProducts = async (req, res,next) => {
 
 const storeProducts = async (req, res, next) => {
   try {
-    let { title, price, createdBy } = req.body;
-    let products = await Product.create({ title, price, createdBy });
+  
+    let products = await Product.create({
+    ...req.body, 
+    createdBy: req.user._id,
+  });
     res.send(products);
   } catch (err) {
     return next(err);

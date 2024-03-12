@@ -1,6 +1,8 @@
 const Auth = require("../model/User");
 const bcrypt = require("bcrypt");
 const Joi = require("joi");
+var jwt = require("jsonwebtoken");
+
 
 /* 1. client side validation
     2. server side validation
@@ -13,10 +15,6 @@ const signupValidationSchema = Joi.object({
   password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required().min(8)
 });
 
-const loginValidationSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().required(),
-});
 
 const signup = async (req, res, next) => {
   /* server side validation */
@@ -39,7 +37,13 @@ const signup = async (req, res, next) => {
   /* email validation */
   let user = await Auth.findOne({ email: req.body.email });
   if (user) {
-    return res.status(400).send("email already exists");
+    return res.status(400).send({
+      msg: "validation error",
+      errors: {
+        field: "email",
+        msg: "already exists"
+      }
+    });
   }
 
   try {
@@ -64,33 +68,25 @@ const signup = async (req, res, next) => {
 const login = async (req, res, next) => {
   /* server side validation */
   try {
-    await loginValidationSchema.validateAsync(req.body, {
-      abortEarly: false,
-    });
-  } catch (err) {
-    const errDetails = err.details.map((el) => ({
-      field: el.path[0],
-      message: el.message,
-    }));
-    res.status(400).send(errDetails);
-  }
-
-  try {
     let user = await Auth.findOne({ email: req.body.email });
 
     if (user) {
-      let checkPassword = await bcrypt.compare(
+      let matched = await bcrypt.compare(
         req.body.password,
         user.password
       );
-      if (checkPassword) {
-        res.status(200).send("login successful");
-      } else {
-        res.status(401).send("invalid password");
-      }
-    } else {
-      res.status(401).send("invalid credentials");
-    }
+      if (matched) {
+        user = user.toObject(); //payload error ayo vane yo garne
+        user.password = undefined;
+        const token = jwt.sign(user, "shhhhh");
+        return res.send({token});
+      } 
+    } 
+
+      res.status(401).send({
+        msg: "invalid credentials"
+      });
+    
   } catch (err) {
     return next(err);
   }

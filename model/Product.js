@@ -7,10 +7,12 @@ const ProductSchema = new Schema({
     title:{
         type: String,
         required: true,
+        minLength: 3,  // default validation
     },
     price:{
         type: Number,
         default: 0, //price pathayena vane 0 res dekhaune
+        min:0,
     },
     createdBy : {
         type: ObjectId,
