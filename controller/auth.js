@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const Joi = require("joi");
 var jwt = require("jsonwebtoken");
 
-
 /* 1. client side validation
     2. server side validation
     3. database side validation
@@ -12,9 +11,11 @@ var jwt = require("jsonwebtoken");
 const signupValidationSchema = Joi.object({
   name: Joi.string().min(3).max(30).required(),
   email: Joi.string().email().required(),
-  password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')).required().min(8)
+  password: Joi.string()
+    .pattern(new RegExp("^[a-zA-Z0-9]{3,30}$"))
+    .required()
+    .min(8),
 });
-
 
 const signup = async (req, res, next) => {
   /* server side validation */
@@ -24,25 +25,14 @@ const signup = async (req, res, next) => {
       abortEarly: false, // name ra email pathako bata validation err aairaacha but if yo use garena vane name ko matra err dekhaucha email ko dekhaudaina res ma
     });
   } catch (err) {
-    return res.status(400).send({ 
-      msg: "validation error",
-      errors: err.details.map(el => {
-        return{
-          field: el.context.key,
-          msg: el.message,
-        }
-      })
-     });
-  }
-  /* email validation */
-  let user = await Auth.findOne({ email: req.body.email });
-  if (user) {
     return res.status(400).send({
       msg: "validation error",
-      errors: {
-        field: "email",
-        msg: "already exists"
-      }
+      errors: err.details.map((el) => {
+        return {
+          field: el.context.key,
+          msg: el.message,
+        };
+      }),
     });
   }
 
@@ -58,7 +48,6 @@ const signup = async (req, res, next) => {
     delete user.password; // password lukako
     */
 
-
     res.send(user);
   } catch (err) {
     return next(err);
@@ -71,22 +60,18 @@ const login = async (req, res, next) => {
     let user = await Auth.findOne({ email: req.body.email });
 
     if (user) {
-      let matched = await bcrypt.compare(
-        req.body.password,
-        user.password
-      );
+      let matched = await bcrypt.compare(req.body.password, user.password);
       if (matched) {
         user = user.toObject(); //payload error ayo vane yo garne
         user.password = undefined;
-        const token = jwt.sign(user, "shhhhh");
-        return res.send({token});
-      } 
-    } 
+        const token = jwt.sign(user, "yourSecretSignature");
+        return res.send({ token });
+      }
+    }
 
-      res.status(401).send({
-        msg: "invalid credentials"
-      });
-    
+    res.status(401).send({
+      msg: "invalid credentials",
+    });
   } catch (err) {
     return next(err);
   }

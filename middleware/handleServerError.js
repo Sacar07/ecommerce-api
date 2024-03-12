@@ -1,20 +1,32 @@
 module.exports = (err, req, res, next) => {
   let statusCode = 500;
-  let error = err.name;
+  let errors = null;
   let msg = "server error"
 
   if (err.name === "ValidationError"){
     msg = "Bad request/Validation error"
     statusCode = 400;
-    error = {
-        email: "already exists",
-        password: "required field",
-    }
+    const errArray = Object.entries(err.errors);
+    
+    // errors = [{
+    //     msg:"validation error",
+    //     errors: errArray.map((el) => ({
+    //         field: el[0],
+    //         msg: el[1].message,
+    //     })),
+    // }]
+
+    errors = [];
+    errArray.forEach(el => 
+        errors.push({
+        field: el[0],
+        msg: el[1].message,
+    }))
 }
 
 res.status(statusCode).send({
     msg,
-    error,
+    errors,
     stack: err.stack // kun line bata err ako dekhaucha
 });
     
