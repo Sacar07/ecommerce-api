@@ -9,6 +9,10 @@ const ProductSchema = new Schema({
         required: true,
         minLength: 3,  // default validation
     },
+    description: {
+        type: String,
+        maxLength: 255,
+    },
     price:{
         type: Number,
         default: 0, //price pathayena vane 0 res dekhaune
@@ -18,6 +22,9 @@ const ProductSchema = new Schema({
         type: ObjectId,
         ref: "User",
         required: true,
+    },
+    image: {
+        type: String,
     },
 })
 
