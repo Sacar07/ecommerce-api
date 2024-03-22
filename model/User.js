@@ -9,6 +9,10 @@ const UserSchema = new Schema({
         type: String,
         required: true,
     },
+    address:{
+        street: String,
+        ward: Number,
+    },
     email:{
         type: String,
         required: true,
@@ -30,7 +34,8 @@ const UserSchema = new Schema({
     phone: Number,
     password: {
         type: String,
-        required: true
+        required: true,
+        select: false, // find garda password lukaidine /* yesle garda sabbai find ma password aaudaina ra login ma error falcha */
     },
     role:{
         type: String,

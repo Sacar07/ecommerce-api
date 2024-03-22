@@ -58,7 +58,9 @@ const signup = async (req, res, next) => {
 const login = async (req, res, next) => {
   /* server side validation */
   try {
-    let user = await Auth.findOne({ email: req.body.email });
+    let user = await Auth.findOne({ email: req.body.email }).select(
+      "+password"
+    ); //model ma select: false garda sab find lai hateko password lai back lyako ani + le garda aru properties ni aucha natra only password will be obtained from find
 
     if (user) {
       let matched = await bcrypt.compare(req.body.password, user.password);

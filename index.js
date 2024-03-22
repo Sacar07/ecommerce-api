@@ -10,6 +10,7 @@ const authRoutes = require("./route/auth");
 const handleServerError = require("./middleware/handleServerError");
 
 require("./config/database");
+const orderRoutes = require("./route/order")
 
 app.use(express.json()); // global middleware ,sets up req.body
 
@@ -21,6 +22,7 @@ app.use('/uploads',express.static("uploads"));
 
 app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.use(handleServerError);
 /* fs.writeFileSync(path.join(path.resolve(),"custom.txt"),"our text") //creating a file and writing text to it */

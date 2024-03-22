@@ -4,10 +4,20 @@ const Joi = require("joi");
 const fs = require("fs");
 
 const fetchProducts = async (req, res, next) => {
+  let sort = req.query.sort || "dataDesc";
+  let sortBy = {
+    createdAt: -1,
+  };
+  if (sort == "priceAsc") {
+    sortBy = { price: 1 };
+  } else if (sort == "priceDesc") {
+    sortBy = { price: -1 };
+  }
+
   try {
     let products = await Product.find({
-      title: new RegExp(req.query.search, "i"), //regExp used to make req.query.search case insensitive i.e sent Guitar in query will display all titles having guitar //sorting the products a/c to price -1(descending) 1(ascending)
-    }); /* .sort({ price: -1 }); */
+      title: new RegExp(req.query.search, "i"), //regExp used to make req.query.search through i, case insensitive i.e sent Guitar in query will display all titles having guitar //sorting the products a/c to price -1(descending) 1(ascending)
+    }).sort(sortBy);
 
     /* aggregation : advance find method */
 
@@ -91,21 +101,21 @@ const updateProducts = async (req, res) => {
   }
 };
 
-const deleteProducts = async (req, res,next) => {
-  try{
+const deleteProducts = async (req, res, next) => {
+  try {
     let matched = await Product.findById(req.params._id);
-    if(!matched){ /* custom error thrown */
+    if (!matched) {
+      /* custom error thrown */
       let error = new Error();
       error.statusCode = 404; //this is stored in err
       error.msg = "Not found"; // stored in err
       throw error;
     }
-  
+
     let product = await Product.findByIdAndDelete(req.params._id);
     fs.unlinkSync(path.join(path.resolve(), product.image)); // deleting a file (image)
     res.send("Product deleted");
-  }
-  catch(err){
+  } catch (err) {
     next(err);
   }
 };
