@@ -4,19 +4,29 @@ const Joi = require("joi");
 const fs = require("fs");
 
 const fetchProducts = async (req, res, next) => {
-  let sort = req.query.sort || "dataDesc";
-  let sortBy = {
-    createdAt: -1,
-  };
-  if (sort == "priceAsc") {
-    sortBy = { price: 1 };
-  } else if (sort == "priceDesc") {
-    sortBy = { price: -1 };
-  }
 
   try {
+    let sort = req.query.sort || "dataDesc";
+    let priceFrom = parseFloat(req.query.priceFrom) || 0;
+    let priceTo = parseFloat(req.query.priceTo) || 9999999999999999; //parseFloat converts everything to numerical value so if string its parsed to nAn which is falsy value
+
+    let sortBy = {
+      createdAt: -1,
+    };
+
+    if (sort == "priceAsc") {
+      sortBy = { price: 1 };
+    } else if (sort == "priceDesc") {
+      sortBy = { price: -1 };
+    } else if (sort == "titleAsc") {
+      sortBy = { title: 1 };
+    } else if (sort == "titleDesc") {
+      sortBy = { price: -1 };
+    }
+
     let products = await Product.find({
       title: new RegExp(req.query.search, "i"), //regExp used to make req.query.search through i, case insensitive i.e sent Guitar in query will display all titles having guitar //sorting the products a/c to price -1(descending) 1(ascending)
+      $and: [{ price: { $gte: priceFrom } }, { price: { $lte: priceTo } }], // query operator for range filtering
     }).sort(sortBy);
 
     /* aggregation : advance find method */
@@ -113,7 +123,9 @@ const deleteProducts = async (req, res, next) => {
     }
 
     let product = await Product.findByIdAndDelete(req.params._id);
-    fs.unlinkSync(path.join(path.resolve(), product.image)); // deleting a file (image)
+    fs.unlink(path.join(path.resolve(), product.image), (err, data) => {
+      console.log(err); //can also be done through post hooks
+    }); // deleting a file (image)
     res.send("Product deleted");
   } catch (err) {
     next(err);
