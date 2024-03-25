@@ -4,11 +4,12 @@ const Joi = require("joi");
 const fs = require("fs");
 
 const fetchProducts = async (req, res, next) => {
-
   try {
     let sort = req.query.sort || "dataDesc";
     let priceFrom = parseFloat(req.query.priceFrom) || 0;
     let priceTo = parseFloat(req.query.priceTo) || 9999999999999999; //parseFloat converts everything to numerical value so if string its parsed to nAn which is falsy value
+    let perPage = parseInt(req.query.perPage) || 5;
+    let page = parseInt(req.query.page) || 1;
 
     let sortBy = {
       createdAt: -1,
@@ -24,14 +25,68 @@ const fetchProducts = async (req, res, next) => {
       sortBy = { price: -1 };
     }
 
-    let products = await Product.find({
-      title: new RegExp(req.query.search, "i"), //regExp used to make req.query.search through i, case insensitive i.e sent Guitar in query will display all titles having guitar //sorting the products a/c to price -1(descending) 1(ascending)
+    let productFilter = {
+      title: new RegExp(req.query.sort, "i"), //regExp used to make req.query.sort through i, case insensitive i.e sent Guitar in query will display all titles having guitar //sorting the products a/c to price -1(descending) 1(ascending)
       $and: [{ price: { $gte: priceFrom } }, { price: { $lte: priceTo } }], // query operator for range filtering
-    }).sort(sortBy);
+    };
+
+    let products = await Product.find(productFilter)
+      .sort(sortBy)
+      .skip((page - 1) * perPage) //kati ota products exclude garne from beginning
+      .limit(perPage)
+      .populate("createdBy"); //kati ota products display garne
+
+    let totalProducts = await Product.countDocuments(productFilter);
+    //  totalProducts = totalProducts.length;
+
 
     /* aggregation : advance find method */
+    productss = await Product.aggregate([
+      {
+        $match: {
+          title: new RegExp(req.query.sort, "i"),
+        },
+      },
+      {
+        $match: {
+          $and: [{ price: { $gte: priceFrom } }, { price: { $lte: priceTo } }],
+        },
+      },
+      {
+        /* populate in agg  */
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+        },
+      },
+      {
+        $unwind: "$createdBy",
+      },
+      {
+        $project: {
+          "createdBy.name": 1,
+          "createdBy.email": 1,
+        },
+      },
+      {
+        $skip:(page - 1) * perPage
+      },
+      { 
+        $limit : perPage
+      },
+      {
+        $facet //to count
+      }
+    ]);
 
-    res.send(products);
+    res.send({
+      page: page,
+      perPage,
+      total: totalProducts,
+      data: products,
+    });
   } catch (err) {
     return next(err);
   }
